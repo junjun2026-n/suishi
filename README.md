@@ -1,6 +1,32 @@
+<!--
+============================================================
+文件名称：README.md
+生成日期：2026-11-21
+修改日期：2026-11-23
+版本信息：v0.261115
+作者：JUN
+备注：本程序由AI辅助完成。
+文件功能用途：介绍邃室功能、安装启动、WAF 接入与日常维护。
+注意事项：业务端口与管理端口分别使用，部署前检查权限和数据备份。
+============================================================
+-->
 # 邃室SuiShi
 
 邃室是面向琼海 WAF 非法请求引流的 Python HTTP 蜜罐。提供独立的业务接收入口、管理员访问页面、自适应模拟场景、攻击特征识别、来源画像、请求检索、分页和详情。不包含 SSH、数据库协议模拟或任意程序执行环境。
+
+代码仓库：[junjun2026-n/suishi](https://github.com/junjun2026-n/suishi)。可配合 WAF 使用，也可独立接收 HTTP 请求。
+
+## 功能概览
+
+| 功能 | 说明 |
+| --- | --- |
+| HTTP 诱饵 | CMS、Spring、Jenkins、GitLab、容器、数据服务、网关及文件调试页面 |
+| 请求分析 | 特征识别、风险分类、来源画像、请求详情与 JSON 导出 |
+| 联调验证 | 27 个固定内部回放场景，保存命中结果和模拟标记 |
+| 持久存储 | SQLite、PostgreSQL、MySQL / MariaDB，连接测试与初始化迁移 |
+| 管理与转发 | 管理员/只读用户、登录退出、UDP/TCP 日志转发 |
+
+完整操作步骤见 [使用与部署说明](docs/USER_GUIDE.md)，数据库操作见 [数据库与用户管理](DATABASE_USERS.md)，转发格式见 [日志转发说明](LOG_FORWARDING.md)。
 
 版本：v0.261115。作者：JUN。版权归本人所有。采用 GPL-3.0 许可，全文见 LICENSE。
 
@@ -49,7 +75,7 @@ Compose 默认业务端口对外发布，管理端口仅发布到宿主机回环
 
 ## 数据与维护
 
-数据库支持 SQLite、PostgreSQL、MySQL / MariaDB，管理页面提供连接测试和初始化迁移。当前本地部署已迁移至 `192.168.17.127:5432/suishidb`。新增登录、退出和用户管理，支持管理员和只读用户，默认 admin 不可删除。详见 [数据库与用户操作说明](DATABASE_USERS.md)。
+数据库支持 SQLite、PostgreSQL、MySQL / MariaDB，管理页面提供连接测试和初始化迁移。初次部署默认使用 SQLite，可按自己的环境配置网络数据库。支持管理员和只读用户，默认 admin 不可删除。详见 [数据库与用户操作说明](DATABASE_USERS.md)。
 
 ## 日志转发
 
@@ -57,9 +83,28 @@ Compose 默认业务端口对外发布，管理端口仅发布到宿主机回环
 
 ## 攻击模拟验证
 
-管理页“攻击模拟”提供12个固定场景：SQL注入、XSS、目录穿越、命令执行探测、SSRF、敏感文件扫描、扫描器指纹、管理登录探测、XML外部实体、模板注入、脚本上传以及正常访问对照。
+### 引流服务扩展
 
-勾选需要的场景后点击“执行选中场景”，可展开查看请求样例。结果展示预期类别、实际命中类别、HTTP状态及关联请求详情；历史保存最近30次展示，数据库保留全部任务。每批最多12条，逐条执行，页面和服务器均防止重复并发执行。模拟没有自定义外部目标入口，不产生外部网络流量，不执行请求中的命令、脚本或文件。
+“蜜罐配置”新增 8 类响应模式和引流服务目录。自适应模式匹配全部诱饵；指定模式用于未知路径的默认响应，已识别路径优先匹配。
+
+| 类型 | 典型路径 |
+| --- | --- |
+| WordPress / CMS | `/wp-login.php`、`/wp-json/`、`/xmlrpc.php` |
+| Spring 运维 | `/actuator/health`、`/actuator/env`、`/actuator/mappings` |
+| Jenkins | `/jenkins/login`、`/jenkins/api/json`、`/jenkins/script` |
+| GitLab | `/users/sign_in`、`/api/v4/projects` |
+| Docker / Kubernetes | `/version`、`/containers/json`、`/api/v1/pods` |
+| Elasticsearch / Web 数据管理 | `/_cluster/health`、`/_cat/indices`、`/_search`、`/adminer.php` |
+| 网关 / VPN / OA | `/vpn/login`、`/remote/login`、`/oa/login`、`/cgi-bin/luci/` |
+| 文件 / 调试 | `/.git/HEAD`、`/backup.sql`、`/server-status`、`/swagger.json`、`/debug/pprof/` |
+
+WAF 蜜罐目标仍填写 `http://邃室主机:8910`。新增类型提供承接路径和分类记录，不自动更改 WAF 引流规则。请按站点配置相应策略，保留原请求路径并配置可信代理来源。返回内容均为虚构样例，不创建容器、不连接集群、不开放原生数据库协议、不运行控制台代码或提供真实账号。
+
+### 内部回放
+
+管理页“攻击模拟”提供27个固定场景：保留 SQL注入、XSS、目录穿越、命令执行、SSRF 等原12项；新增 WordPress REST、XML-RPC、Spring 配置、Jenkins 控制台、GitLab、Docker、Kubernetes、Elasticsearch、VPN、OA、Swagger、调试接口、NoSQL 注入、LDAP 注入及 Java 序列化特征验证。
+
+勾选需要的场景后点击“执行选中场景”，可展开查看请求样例。结果展示预期类别、实际命中类别、HTTP状态及关联请求详情；历史保存最近30次展示，数据库保留全部任务。每批最多32条，逐条执行，页面和服务器均防止重复并发执行。模拟没有自定义外部目标入口，不产生外部网络流量，不执行请求中的命令、脚本或文件。
 
 此功能通过本应用内部ASGI回放，验证蜜罐采集、攻击识别、响应和日志记录；不经过WAF、网卡或TLS入口，因此不能代替真实WAF引流联调，也不模拟DDoS或高并发压测。规则匹配通过不代表防护已经覆盖该类攻击的所有变体。
 

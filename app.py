@@ -1,12 +1,12 @@
 # ============================================================
 # 文件名称：app.py
 # 生成日期：2026-11-21
-# 修改日期：2026-11-21
+# 修改日期：2026-11-22
 # 版本信息：v0.261115
-# 作    者：JUN
-# 备    注：本程序由AI辅助完成。
-#           文件功能：邃室蜜罐请求接收、日志存储与管理接口。
-#           注意事项：请求内容仅存储分析，不执行；管理端口限制受信网络访问。
+# 作者：JUN
+# 备注：本程序由AI辅助完成。
+# 文件功能用途：提供蜜罐请求采集、管理接口及独立服务生命周期。
+# 注意事项：管理接口需认证，请求正文按配置限量采集且不得执行。
 # ============================================================
 import base64
 import ipaddress
@@ -30,6 +30,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from starlette.concurrency import run_in_threadpool
 from analysis import analyze, respond
 from simulations import CASES
+from decoys import CATALOG, PROFILES
 from forwarding import Forwarder, ForwardConfig, encode_event, send_message
 from database import Database, register_database
 from accounts import Accounts, register_accounts
@@ -40,7 +41,7 @@ security = HTTPBasic(auto_error=False)
 
 
 class Settings(BaseModel):
-    profile: Literal['adaptive', 'portal'] = 'adaptive'
+    profile: Literal['adaptive', 'portal', 'wordpress', 'spring', 'jenkins', 'gitlab', 'containers', 'data', 'gateway', 'files'] = 'adaptive'
     body_limit: int = Field(default=MAX_BODY, ge=1024, le=1048576)
     read_timeout: int = Field(default=10, ge=1, le=30)
 
@@ -51,7 +52,7 @@ class Retention(BaseModel):
 
 class SimulationInput(BaseModel):
     model_config = {'extra': 'forbid'}
-    case_ids: list[str] = Field(min_length=1, max_length=12)
+    case_ids: list[str] = Field(min_length=1, max_length=32)
 
 
 def create_apps(data_dir=None, password=None, trusted_proxies=None):
@@ -87,6 +88,9 @@ def create_apps(data_dir=None, password=None, trusted_proxies=None):
 
     def authenticated(request: Request, credentials: HTTPBasicCredentials = Depends(security)):
         if request.url.path in ('/login', '/api/login', '/api/logout'):
+            return
+        if request.method in ('GET', 'HEAD') and request.url.path in (
+                '/simulation.js', '/forwarding.js', '/administration.js', '/settings.js'):
             return
         user = accounts.identity(request, credentials)
         if not user:
@@ -193,6 +197,10 @@ def create_apps(data_dir=None, password=None, trusted_proxies=None):
     def index():
         return FileResponse(ROOT / 'static' / 'index.html', headers={'Cache-Control': 'no-store'})
 
+    @management.get('/api/decoys')
+    def decoy_catalog():
+        return {'items':CATALOG, 'profiles':PROFILES, 'entry_port':int(os.getenv('SUISHI_PORT','8910'))}
+
     @management.get('/simulation.js')
     def simulation_script():
         return FileResponse(ROOT / 'static' / 'simulation.js', media_type='text/javascript',
@@ -239,7 +247,7 @@ def create_apps(data_dir=None, password=None, trusted_proxies=None):
 
     @management.get('/api/simulations/cases')
     def simulation_cases():
-        return {'items': CASES, 'target': '本机蜜罐内部回放', 'max_requests': 12}
+        return {'items': CASES, 'target': '本机蜜罐内部回放', 'max_requests': 32}
 
     @management.get('/api/simulations/runs')
     def simulation_runs():

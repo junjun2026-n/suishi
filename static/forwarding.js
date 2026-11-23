@@ -1,5 +1,13 @@
-// 文件名称：forwarding.js | 生成/修改日期：2026-11-21 | 版本：v0.261115 | 作者：JUN
-// 备注：本程序由AI辅助完成。日志转发配置页面；外部返回内容仅作为文本展示。
+// ============================================================
+// 文件名称：forwarding.js
+// 生成日期：2026-11-21
+// 修改日期：2026-11-22
+// 版本信息：v0.261115
+// 作者：JUN
+// 备注：本程序由AI辅助完成。
+// 文件功能用途：提供日志转发配置、测试发送和队列状态界面。
+// 注意事项：外部消息只按文本显示，启用正文转发前确认接收端权限。
+// ============================================================
 (() => {
   const button = document.createElement('button');
   button.textContent = '日志转发';
@@ -28,6 +36,7 @@
   }
   async function request(path, method, data) {
     const response = await fetch('/api/forwarding' + path, {method, headers: {'Content-Type': 'application/json', 'X-Suishi-Action': 'forwarding'}, ...(data ? {body: JSON.stringify(data)} : {})});
+    checkSession(response);
     const result = await response.json();
     if (!response.ok) throw new Error(typeof result.detail === 'string' ? result.detail : JSON.stringify(result.detail));
     return result;

@@ -1,5 +1,13 @@
-// 文件名称：administration.js | 生成/修改日期：2026-11-21 | 版本：v0.261115 | 作者：JUN
-// 备注：本程序由AI辅助完成。数据库与用户管理；密码不写入浏览器本地存储。
+// ============================================================
+// 文件名称：administration.js
+// 生成日期：2026-11-21
+// 修改日期：2026-11-22
+// 版本信息：v0.261115
+// 作者：JUN
+// 备注：本程序由AI辅助完成。
+// 文件功能用途：提供数据库连接配置、初始化迁移及用户管理界面。
+// 注意事项：管理功能需管理员权限，不将密码保存到浏览器本地存储。
+// ============================================================
 (() => {
   const panel = document.createElement('section'); panel.hidden = true;
   document.getElementById('events-view').before(panel);
@@ -10,7 +18,7 @@
   const notice = document.createElement('p'); notice.setAttribute('role','status');
   async function call(path, method='GET', data) {
     const r=await fetch(path,{method,headers:{'Content-Type':'application/json','X-Suishi-Action':'administration'},...(data?{body:JSON.stringify(data)}:{})});
-    if(r.status===401){location.replace('/login');throw new Error('请重新登录')}
+    checkSession(r);
     const result=await r.json(); if(!r.ok)throw new Error(typeof result.detail==='string'?result.detail:JSON.stringify(result.detail));return result;
   }
   async function attempt(fn){try{await fn()}catch(e){notice.textContent=e.message}}

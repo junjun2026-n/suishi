@@ -1,7 +1,13 @@
+# ============================================================
 # 文件名称：test_simulations.py
-# 生成日期：2026-11-21 | 修改日期：2026-11-21 | 版本信息：v0.261115
+# 生成日期：2026-11-21
+# 修改日期：2026-11-21
+# 版本信息：v0.261115
 # 作者：JUN
-# 备注：本程序由AI辅助完成。验证攻击模拟完整回放、访问控制及日志关联。
+# 备注：本程序由AI辅助完成。
+# 文件功能用途：验证固定场景回放、识别结果和关联记录。
+# 注意事项：仅执行内部模拟，不向外部主机发送攻击请求。
+# ============================================================
 from fastapi.testclient import TestClient
 from app import create_apps
 from simulations import CASES
@@ -19,10 +25,10 @@ def test_simulation_suite(tmp_path):
     assert response.status_code == 200
     result = response.json()
     assert result['status'] == 'completed'
-    assert len(result['results']) == 12
+    assert len(result['results']) == len(CASES)
     assert all(row['passed'] for row in result['results']), result
     rows = client.get('/api/events?traffic=simulation', auth=auth).json()
-    assert rows['total'] == 12
+    assert rows['total'] == len(CASES)
     assert all(row['simulation_run'] == result['id'] for row in rows['items'])
     assert client.get('/api/events?traffic=real', auth=auth).json()['total'] == 0
     for row in result['results']:
@@ -35,7 +41,7 @@ def test_validation_and_no_external_target(tmp_path):
     _, management = create_apps(tmp_path, password='testing')
     client = TestClient(management)
     kwargs = {'auth': ('admin', 'testing'), 'headers': {'X-Suishi-Action': 'simulation'}}
-    for value in [{'case_ids': []}, {'case_ids': ['unknown']}, {'case_ids': ['normal']*13},
+    for value in [{'case_ids': []}, {'case_ids': ['unknown']}, {'case_ids': ['normal']*33},
                   {'case_ids':['normal'], 'target':'https://example.com'}]:
         assert client.post('/api/simulations/run', json=value, **kwargs).status_code == 422
     assert client.get('/api/simulations/runs', auth=('admin','testing')).json()['items'] == []

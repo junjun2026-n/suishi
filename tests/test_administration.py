@@ -1,6 +1,13 @@
-# 文件名称：test_administration.py | 生成/修改日期：2026-11-21
-# 版本信息：v0.261115 | 作者：JUN
-# 备注：本程序由AI辅助完成。验证迁移、用户授权、不可删除管理员及会话撤销。
+# ============================================================
+# 文件名称：test_administration.py
+# 生成日期：2026-11-21
+# 修改日期：2026-11-22
+# 版本信息：v0.261115
+# 作者：JUN
+# 备注：本程序由AI辅助完成。
+# 文件功能用途：验证数据库迁移、用户授权、admin 保护及会话撤销。
+# 注意事项：使用隔离测试数据，不得操作生产账户或生产数据库。
+# ============================================================
 from fastapi.testclient import TestClient
 from app import create_apps
 
@@ -12,6 +19,12 @@ def test_users_permissions_sessions_and_logout(tmp_path):
     decoy, app = create_apps(tmp_path, password='testing')
     client = TestClient(app)
     assert client.get('/').url.path == '/login'
+    for path in ('/simulation.js', '/forwarding.js', '/administration.js', '/settings.js'):
+        response = client.get(path + '?v=20261122-2')
+        assert response.status_code == 200
+        assert response.headers['Cache-Control'] == 'no-store'
+    for path in ('/api/settings', '/api/decoys', '/api/events', '/api/users'):
+        assert client.get(path).status_code == 401
     viewer = {'username': 'reader', 'password': 'reader123!', 'role': 'viewer'}
     assert client.post('/api/users', auth=AUTH, headers=HEADERS, json=viewer).status_code == 200
     assert client.post('/api/users', auth=AUTH, headers=HEADERS, json=viewer).status_code == 409
