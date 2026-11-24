@@ -27,7 +27,7 @@
 </section><div id="events-view">
 <section><div class="toolbar"><input id="query" placeholder="搜索来源 IP、请求路径、WAF 规则"><select id="traffic"><option value="all">全部流量</option><option value="real">真实流量</option><option value="simulation">模拟流量</option></select><select id="risk"><option value="">全部风险</option><option>高</option><option>中</option><option>低</option><option>信息</option></select><select id="size"><option>20</option><option>50</option><option>100</option></select><button id="search">查询</button><button id="refresh">刷新数据</button></div><div class="toolbar"><label>开始时间 <input id="start" type="datetime-local"></label><label>结束时间 <input id="end" type="datetime-local"></label></div><div id="notice" role="status"></div>
 <div class="table"><table><thead><tr><th>时间</th><th>来源 IP</th><th>方法</th><th>请求路径</th><th>命中规则</th><th>状态</th><th>详情</th></tr></thead><tbody id="rows"></tbody></table></div>
-<div class="footer"><button id="prev">上一页</button><span id="paging"></span><button id="next">下一页</button></div></section></div><p id="global-notice" role="status"></p><p>v0.261115 · 版权归本人所有。</p></main>
+<div class="footer"><button id="prev">上一页</button><span id="paging"></span><button id="next">下一页</button></div></section></div><p id="global-notice" role="status"></p><p>v0.261115 · 请遵守版权协议。</p></main>
 <dialog id="detail"><button class="close" id="close" aria-label="关闭">×</button><h2>请求详情</h2><pre id="payload"></pre></dialog>
 <script>
 let page=1,pages=1;const $=id=>document.getElementById(id);

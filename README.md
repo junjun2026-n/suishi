@@ -28,7 +28,7 @@
 
 完整操作步骤见 [使用与部署说明](docs/USER_GUIDE.md)，数据库操作见 [数据库与用户管理](DATABASE_USERS.md)，转发格式见 [日志转发说明](LOG_FORWARDING.md)。
 
-版本：v0.261115。作者：JUN。版权归本人所有。采用 GPL-3.0 许可，全文见 LICENSE。
+版本：v0.261115。作者：JUN。请遵守版权协议。采用 GPL-3.0 许可，全文见 LICENSE。
 
 ## 本地启动
 
